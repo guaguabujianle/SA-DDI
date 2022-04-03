@@ -18,7 +18,6 @@ torch_scatter==2.0.9
   Running data_preprocessing.py convert the raw data into graph format. \
    Create a directory using \
   `mkdir save`  
-  
 - Second, run train.py using 
   `python train.py --fold 0 --save_model` 
 
@@ -38,7 +37,7 @@ torch_scatter==2.0.9
   `python data_preprocessing.py -d twosides -o all`   
   Running data_preprocessing.py convert the raw data into graph format.
   Create a directory using \
-  `mkdir save` \
+  `mkdir save`
 - Second, run train.py using 
   `python train.py --fold 0 --save_model` 
 
