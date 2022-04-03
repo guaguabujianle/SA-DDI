@@ -15,8 +15,8 @@ torch_scatter==2.0.9
 ### 1. DrugBank
 - First, cd SA-DDI/drugbank, and run data_preprocessing.py using  
   `python data_preprocessing.py -d drugbank -o all`  
-  Running data_preprocessing.py convert the raw data into graph format.
-   Create a directory using
+  Running data_preprocessing.py convert the raw data into graph format. \
+   Create a directory using \
   `mkdir save`  
   
 - Second, run train.py using 
@@ -37,8 +37,8 @@ torch_scatter==2.0.9
 - First, cd SA-DDI/drugbank, and run data_preprocessing.py using  
   `python data_preprocessing.py -d twosides -o all`   
   Running data_preprocessing.py convert the raw data into graph format.
-  Create a directory using
-  `mkdir save` 
+  Create a directory using \
+  `mkdir save` \
 - Second, run train.py using 
   `python train.py --fold 0 --save_model` 
 
