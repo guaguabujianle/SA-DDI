@@ -24,10 +24,10 @@ torch_scatter==2.0.9
   Explanation of parameters
 
   - --n_iter: number of iterations
-  - --fold: [0, 1, 2]
+  - --fold: {0, 1, 2}
   - --epochs: number of epochs
   - --weight_decay: weight decay
   - --batch_size: batch size
-  - --save_model: whether save model or not, for example, 'python train.py' will not save the model and 'python train.py --save_model' will save the model.
+  - --save_model: whether save the model or not, for example, 'python train.py' will not save the model and 'python train.py --save_model' will save the model.
   - --lr: learning rate
 
