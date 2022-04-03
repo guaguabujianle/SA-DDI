@@ -2,14 +2,14 @@
 
 ## Requirements  
 
-numpy==1.18.1
-tqdm==4.42.1
-pandas==1.0.1
-rdkit==2009.Q1-1
-scikit_learn==1.0.2
-torch==1.11.0
-torch_geometric==2.0.4
-torch_scatter==2.0.9
+numpy==1.18.1 \
+tqdm==4.42.1 \
+pandas==1.0.1 \
+rdkit==2009.Q1-1 \
+scikit_learn==1.0.2 \
+torch==1.11.0 \
+torch_geometric==2.0.4 \
+torch_scatter==2.0.9 \
 
 ## Step-by-step running:  
 - First, cd SA-DDI/drugbank, and run data_preprocessing.py using  
