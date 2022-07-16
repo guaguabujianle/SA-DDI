@@ -192,7 +192,7 @@ def generate_pair_triplets(args):
 def load_data_statistics(all_tuples):
     '''
     This function is used to calculate the probability in order to generate a negative. 
-    You can skip it because is is unimportant.
+    You can skip it because it is unimportant.
     '''
     print('Loading data statistics ...')
     statistics = dict()
@@ -269,9 +269,7 @@ def split_data(args):
     filename = f'{args.dirname}/{args.dataset}/pair_pos_neg_triplets.csv'
     df = pd.read_csv(filename)
     seed = args.seed
-    class_name = args.class_name 
-    test_size_ratio = args.test_ratio
-    n_folds = args.n_folds 
+    class_name = args.class_name 0
     save_to_filename = os.path.splitext(filename)[0]
     cv_split = StratifiedShuffleSplit(n_splits=n_folds, test_size=test_size_ratio, random_state=seed)
     for fold_i, (train_index, test_index) in enumerate(cv_split.split(X=df, y=df[class_name])):

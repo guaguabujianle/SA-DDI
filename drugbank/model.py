@@ -45,32 +45,40 @@ class DMPNN(nn.Module):
     def forward(self, data):
 
         edge_index = data.edge_index
-
+        # Recall that we have converted the node graph to the line graph, 
+        # so we should assign each bond a bond-level feature vector at the beginning (i.e., h_{ij}^{(0)}) in the paper).
         edge_u = self.lin_u(data.x)
         edge_v = self.lin_v(data.x)
         edge_uv = self.lin_edge(data.edge_attr)
         edge_attr = (edge_u[edge_index[0]] + edge_v[edge_index[1]] + edge_uv) / 3
         out = edge_attr
         
+        # The codes below show the graph convolution and substructure attention.
         out_list = []
         gout_list = []
         for n in range(self.n_iter):
+            # Lines 61 and 62 are the main steps of graph convolution.
             out = scatter(out[data.line_graph_edge_index[0]] , data.line_graph_edge_index[1], dim_size=edge_attr.size(0), dim=0, reduce='add')
             out = edge_attr + out
+            # Equation (1) in the paper
             gout = self.att(out, data.line_graph_edge_index, data.edge_index_batch)
             out_list.append(out)
             gout_list.append(F.tanh((self.lin_gout(gout))))
 
         gout_all = torch.stack(gout_list, dim=-1)
         out_all = torch.stack(out_list, dim=-1)
-        # substructure attention
+        # Substructure attention, Equation (3)
         scores = (gout_all * self.a).sum(1, keepdim=True) + self.a_bias
+        # Substructure attention, Equation (4),
+        # Suppose batch_size=64 and iteraction_numbers=10. 
+        # Then the scores will have a shape of (64, 1, 10), 
+        # which means that each graph has 10 scores where the n-th score represents the importance of substructure with radius n.
         scores = torch.softmax(scores, dim=-1)
-
+        # We should spread each score to every line in the line graph.
         scores = scores.repeat_interleave(degree(data.edge_index_batch, dtype=data.edge_index_batch.dtype), dim=0)
-
+        # Weighted sum of bond-level hidden features across all steps, Equation (5).
         out = (out_all * scores).sum(-1)
-
+        # Return to node-level hidden features, Equations (6)-(7).
         x = data.x + scatter(out , edge_index[1], dim_size=data.x.size(0), dim=0, reduce='add')
         x = self.lin_block(x)
 
@@ -162,22 +170,24 @@ class SA_DDI(torch.nn.Module):
         x_h = self.drug_encoder(h_data)
         x_t = self.drug_encoder(t_data)
 
-        # start of SSIM
+        # Start of SSIM
+        # TAGP, Equation (8)
         g_h = self.h_gpool(x_h, h_data.edge_index, h_data.batch)
         g_t = self.t_gpool(x_t, t_data.edge_index, t_data.batch)
 
         g_h_align = g_h.repeat_interleave(degree(t_data.batch, dtype=t_data.batch.dtype), dim=0)
         g_t_align = g_t.repeat_interleave(degree(h_data.batch, dtype=h_data.batch.dtype), dim=0)
 
+        # Equation (10)
         h_scores = (self.w_i(x_h) * self.prj_i(g_t_align)).sum(-1)
         h_scores = softmax(h_scores, h_data.batch, dim=0)
-
+        # Equation (10)
         t_scores = (self.w_j(x_t) * self.prj_j(g_h_align)).sum(-1)
         t_scores = softmax(t_scores, t_data.batch, dim=0)
-
+        # Equation (11)
         h_final = global_add_pool(x_h * g_t_align * h_scores.unsqueeze(-1), h_data.batch)
         t_final = global_add_pool(x_t * g_h_align * t_scores.unsqueeze(-1), t_data.batch)
-        # end of SSIM
+        # End of SSIM
 
         pair = torch.cat([h_final, t_final], dim=-1)
         rfeat = self.rmodule(rels)
