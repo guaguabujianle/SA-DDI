@@ -10,7 +10,16 @@ from tqdm import tqdm
 import pickle
 import os
 
+'''
+The D-MPNN takes line graphs instead of node graphs used in common GNN as input. 
+This is because the D-MPNN operates on edges/bonds instead of nodes. 
+So we have to convert the node graph to the line graph.
+'''
+
 class CustomData(Data):
+    '''
+    Since we have converted the node graph to the line graph, we should specify the increase of the index as well.
+    '''
     def __inc__(self, key, value, *args, **kwargs):
     # In case of "TypeError: __inc__() takes 3 positional arguments but 4 were given"
     # Replace with "def __inc__(self, key, value, *args, **kwargs)"
@@ -21,19 +30,27 @@ class CustomData(Data):
         # Replace with "return super().__inc__(self, key, value, args, kwargs)"
 
 def one_of_k_encoding(k, possible_values):
+    '''
+    Convert integer to one-hot representation.
+    '''
     if k not in possible_values:
         raise ValueError(f"{k} is not a valid value in {possible_values}")
     return [k == e for e in possible_values]
 
 
 def one_of_k_encoding_unk(x, allowable_set):
+    '''
+    Convert integer to one-hot representation.
+    '''
     if x not in allowable_set:
         x = allowable_set[-1]
     return list(map(lambda s: x == s, allowable_set))
 
 
 def atom_features(atom, atom_symbols, explicit_H=True, use_chirality=False):
-    
+    '''
+    Get atom features. Note that atom.GetFormalCharge() can return -1
+    '''
     results = one_of_k_encoding_unk(atom.GetSymbol(), atom_symbols + ['Unknown']) + \
             one_of_k_encoding(atom.GetDegree(),[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) + \
             one_of_k_encoding_unk(atom.GetImplicitValence(), [0, 1, 2, 3, 4, 5, 6]) + \
@@ -62,6 +79,9 @@ def atom_features(atom, atom_symbols, explicit_H=True, use_chirality=False):
 
 
 def edge_features(bond):
+    '''
+    Get bond features
+    '''
     bond_type = bond.GetBondType()
     return torch.tensor([
         bond_type == Chem.rdchem.BondType.SINGLE,
@@ -72,9 +92,11 @@ def edge_features(bond):
         bond.IsInRing()]).long()
 
 def generate_drug_data(mol_graph, atom_symbols):
-
+    # (bond_i, bond_j, bond_features)
     edge_list = torch.LongTensor([(b.GetBeginAtomIdx(), b.GetEndAtomIdx(), *edge_features(b)) for b in mol_graph.GetBonds()])
+    # Separate (bond_i, bond_j, bond_features) to (bond_i, bond_j) and bond_features 
     edge_list, edge_feats = (edge_list[:, :2], edge_list[:, 2:].float()) if len(edge_list) else (torch.LongTensor([]), torch.FloatTensor([]))
+    # Convert the graph to undirect graph, e.g., [(1, 0)] to [(1, 0), (0, 1)]
     edge_list = torch.cat([edge_list, edge_list[:, [1, 0]]], dim=0) if len(edge_list) else edge_list
     edge_feats = torch.cat([edge_feats]*2, dim=0) if len(edge_feats) else edge_feats
 
@@ -83,6 +105,7 @@ def generate_drug_data(mol_graph, atom_symbols):
     _, features = zip(*features)
     features = torch.stack(features)
 
+    # This is the most essential step to convert a node graph to a line graph
     line_graph_edge_index = torch.LongTensor([])
     if edge_list.nelement() != 0:
         conn = (edge_list[:, 1].unsqueeze(1) == edge_list[:, 0].unsqueeze(0)) & (edge_list[:, 0].unsqueeze(1) != edge_list[:, 1].unsqueeze(0))
@@ -93,27 +116,6 @@ def generate_drug_data(mol_graph, atom_symbols):
     data = CustomData(x=features, edge_index=new_edge_index, line_graph_edge_index=line_graph_edge_index, edge_attr=edge_feats)
 
     return data
-
-def generate_drug_data_GMPNN(mol_graph, atom_symbols):
-
-    edge_list = torch.LongTensor([(b.GetBeginAtomIdx(), b.GetEndAtomIdx(), *edge_features(b)) for b in mol_graph.GetBonds()])
-    edge_list, edge_feats = (edge_list[:, :2], edge_list[:, 2:].float()) if len(edge_list) else (torch.LongTensor([]), torch.FloatTensor([]))
-    edge_list = torch.cat([edge_list, edge_list[:, [1, 0]]], dim=0) if len(edge_list) else edge_list
-    edge_feats = torch.cat([edge_feats]*2, dim=0) if len(edge_feats) else edge_feats
-
-    features = [(atom.GetIdx(), atom_features(atom, atom_symbols)) for atom in mol_graph.GetAtoms()]
-    features.sort() 
-    _, features = zip(*features)
-    features = torch.stack(features)
-
-    line_graph_edge_index = torch.LongTensor([])
-    if edge_list.nelement() != 0:
-        conn = (edge_list[:, 1].unsqueeze(1) == edge_list[:, 0].unsqueeze(0)) & (edge_list[:, 0].unsqueeze(1) != edge_list[:, 1].unsqueeze(0))
-        line_graph_edge_index = conn.nonzero(as_tuple=False).T
-
-    new_edge_index = edge_list.T
-
-    return features, new_edge_index, edge_feats, line_graph_edge_index
 
 
 def load_drug_mol_data(args):
@@ -188,7 +190,10 @@ def generate_pair_triplets(args):
 
 
 def load_data_statistics(all_tuples):
-    
+    '''
+    This function is used to calculate the probability in order to generate a negative. 
+    You can skip it because is is unimportant.
+    '''
     print('Loading data statistics ...')
     statistics = dict()
     statistics["ALL_TRUE_H_WITH_TR"] = defaultdict(list)

@@ -8,7 +8,11 @@ from torch_geometric.utils import  softmax
 from torch_scatter import scatter
 from torch_geometric.utils import degree
 
+
 class GlobalAttentionPool(nn.Module):
+    '''
+    This is the topology-aware global pooling mentioned in the paper.
+    '''
     def __init__(self, hidden_dim):
         super().__init__()
         self.conv = GraphConv(hidden_dim, 1)
