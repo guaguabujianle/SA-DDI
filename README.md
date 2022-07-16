@@ -1,5 +1,6 @@
 # Learning size-adaptive molecular substructures for explainable drug–drug interaction prediction by substructure-aware graph neural network
 SA-DDI is designed to learn size-adaptive molecular substructures for drug-drug interaction prediction and can provide explanations that are consistent with pharmacologists.
+![image](https://github.com/guaguabujianle/SA-DDI/blob/dev/graph%20abstract.jpg)
 
 ## Requirements  
 
