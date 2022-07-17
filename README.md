@@ -2,7 +2,7 @@
 SA-DDI is designed to learn size-adaptive molecular substructures for drug-drug interaction prediction and can provide explanations that are consistent with pharmacologists.
 ![image](https://github.com/guaguabujianle/SA-DDI/blob/dev/graph%20abstract.jpg)
 ## Note
-We have added comments to drugbank/data_preprocessing.py and model.py. If you are interested in the technical details of preprocessing steps and algorithms, I think those comments would be helpful. 
+We have added comments to drugbank/data_preprocessing.py and drugbank/model.py. If you are interested in the technical details of preprocessing steps and algorithms, I think those comments would be helpful. 
 
 ## Requirements  
 
