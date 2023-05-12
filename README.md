@@ -1,6 +1,6 @@
 # Learning size-adaptive molecular substructures for explainable drug–drug interaction prediction by substructure-aware graph neural network
 ## Note
-If you want to use the code in the cold start scenario, you should add dropout to MLP layers and use weight decay. We have added comments to drugbank/data_preprocessing.py and drugbank/model.py. If you are interested in the technical details of preprocessing steps and algorithms, I think those comments would be helpful. 
+If you want to use the code in the cold start scenario, you should add dropout to MLP layers and use weight decay. 
 
 ## Requirements  
 
